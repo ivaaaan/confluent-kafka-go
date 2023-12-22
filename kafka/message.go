@@ -70,14 +70,15 @@ func (t TimestampType) String() string {
 
 // Message represents a Kafka message
 type Message struct {
-	TopicPartition TopicPartition
-	Value          []byte
-	Key            []byte
-	Timestamp      time.Time
-	TimestampType  TimestampType
-	Opaque         interface{}
-	Headers        []Header
-	LeaderEpoch    *int32 // Deprecated: LeaderEpoch or nil if not available. Use m.TopicPartition.LeaderEpoch instead.
+	TopicPartition  TopicPartition
+	Value           []byte
+	Key             []byte
+	Timestamp       time.Time
+	TimestampType   TimestampType
+	Opaque          interface{}
+	Headers         []Header
+	LeaderEpoch     *int32 // Deprecated: LeaderEpoch or nil if not available. Use m.TopicPartition.LeaderEpoch instead.
+	ProducerLatency *int64
 }
 
 // String returns a human readable representation of a Message.
@@ -166,6 +167,11 @@ func (h *handle) setupMessageFromC(msg *Message, cmsg *C.rd_kafka_message_t) {
 	if leaderEpoch >= 0 {
 		msg.LeaderEpoch = &leaderEpoch
 		msg.TopicPartition.LeaderEpoch = &leaderEpoch
+	}
+
+	producerLatency := int64(C.rd_kafka_message_latency(cmsg))
+	if producerLatency >= 0 {
+		msg.ProducerLatency = &producerLatency
 	}
 }
 
